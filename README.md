@@ -68,29 +68,21 @@
 
 使用 Python 版本 >= 3.10.0
 
-clone 项目到本地，并使用 poetry 安装依赖和管理 venv
+clone 项目到本地
 
 ```bash
-git clone 'https://github.com/SocialSisterYi/CxKitty'
+git clone 'https://github.com/PeanutMelonSeedBigAlmond/CxKitty'
 cd CxKitty
-poetry install
+pip install -r requirements.txt
 ```
 
 运行主程序
 
 ```bash
-poetry run python3 main.py
+python main.py
 ```
 
-### 🐋使用  Docker  构建项目
-
-从 DockerHub 拉取最新镜像
-
-```bash
-docker pull socialsisteryi/cx-kitty
-```
-
-~~或手动构建镜像~~
+### 手动构建镜像
 
 <details>
 <summary>展开</summary>
@@ -98,9 +90,9 @@ docker pull socialsisteryi/cx-kitty
 clone 项目到本地，并开始构建镜像
 
 ```bash
-git clone 'https://github.com/SocialSisterYi/CxKitty'
+git clone 'https://github.com/PeanutMelonSeedBigAlmond/CxKitty'
 cd CxKitty
-docker build --tag socialsisteryi/cx-kitty .
+docker build --tag cx-kitty .
 ```
 
 </details>
@@ -127,7 +119,7 @@ docker run -it \
   -v "$PWD/config.yml:/app/config.yml" \
   #-v "$PWD/questions.json:/app/questions.json" \
   #-v "$PWD/questions.db:/app/questions.db" \
-  socialsisteryi/cx-kitty
+  cx-kitty
 ```
 
 ## 🔨Configuration
@@ -142,7 +134,7 @@ docker run -it \
 
 单选题问题与答案应当一一对应，多选题使用`#`或`;`分隔每个选项，判断题答案只能为`对`、`错`、`正确`、`错误`、`√`、`×`
 
-REST API 搜题接口配置，确保接口`searcher->restApiSearcher->url`可以正确访问访问（若使用 Docker 搭建，而题库 API 服务在宿主机运行，应使用宿主机虚拟网关 IP 地址而不是本地回环地址）
+REST API 搜题接口配置，确保接口`searcher->restAPISearcher->url`可以正确访问访问（若使用 Docker 搭建，而题库 API 服务在宿主机运行，应使用宿主机虚拟网关 IP 地址而不是本地回环地址）
 
 返回值必须为 JSON 格式，使用`rsp_field`字段作为选择器传入，使用 [JsonPath](https://goessner.net/articles/JsonPath/) 语法编写，如`$.data`或`$.data.answer[*]`等
 
