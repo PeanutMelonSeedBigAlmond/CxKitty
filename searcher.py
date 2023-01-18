@@ -30,7 +30,7 @@ def suffix_filter(text: str) -> str:
 class SearcherBase:
     "搜索器基类"
 
-    def invoke(self, question_value: str) -> SearchResp:
+    def invoke(self, question_value: str,question_type:int) -> SearchResp:
         """搜题器调用接口
         >>> SearchResp(
         >>>     code=0,  # 错误码为 0 表示成功, 否则为失败
@@ -73,18 +73,18 @@ class RestApiSearcher(SearcherBase):
             return SearchResp(0, "ok", self, self.question_value, result[0])
         return SearchResp(-500, "未匹配答案字段", self, self.question_value, None)
 
-    def invoke(self, question_value: str) -> SearchResp:
+    def invoke(self, question_value: str,question_type:int) -> SearchResp:
         self.question_value = question_value
         try:
             if self.method == "GET":
                 resp = self.session.get(
                     self.url,
-                    params={self.req_field: self.question_value, **self.ext_params},
+                    params={self.req_field: self.question_value,'type':question_type, **self.ext_params},
                 )
             elif self.method == "POST":
                 resp = self.session.post(
                     self.url,
-                    data={self.req_field: self.question_value, **self.ext_params},
+                    data={self.req_field: self.question_value,'type':question_type, **self.ext_params},
                 )
             else:
                 raise TypeError
@@ -130,7 +130,7 @@ class JsonFileSearcher(SearcherBase):
         except FileNotFoundError:
             raise RuntimeError("JSON 题库文件无效, 请检查配置")
 
-    def invoke(self, question_value: str) -> SearchResp:
+    def invoke(self, question_value: str,question_type:int) -> SearchResp:
         for q, a in self.db.items():
             # 遍历题库缓存并判断相似度
             if (
@@ -159,7 +159,7 @@ class SqliteSearcher(SearcherBase):
         self.req_field = req_field
         self.rsp_field = rsp_field
 
-    def invoke(self, question_value: str) -> SearchResp:
+    def invoke(self, question_value: str,question_type:int) -> SearchResp:
         try:
             cur = self.db.execute(
                 f"SELECT {self.req_field},{self.rsp_field} FROM {self.table} WHERE {self.req_field}=(?)",
