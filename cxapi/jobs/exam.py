@@ -38,12 +38,12 @@ def remove_searcher(searcher: SearcherBase):
     searcher_slot.remove(searcher)
 
 
-def invoke_searcher(question: str,question_type:int) -> list[SearchResp]:
+def invoke_searcher(question: str,question_type:int,options:list[str]) -> list[SearchResp]:
     "调用搜索器"
     result = []
     if searcher_slot:
         for searcher in searcher_slot:
-            result.append(searcher.invoke(question,question_type))
+            result.append(searcher.invoke(question,question_type,options))
         return result
     raise NotImplementedError("至少需要加载一个搜索器")
 
@@ -286,7 +286,7 @@ class ChapterExam:
         tb.border_style = "yellow"
         mistake_questions = []  # 答错题列表
         for question in self.questions:
-            results = invoke_searcher(question.value,question.q_type.value)  # 调用搜索器搜索方法
+            results = invoke_searcher(question.value,question.q_type.value,list(map(lambda it:it.value,question.answers)))  # 调用搜索器搜索方法
             self.logger.debug(f"题库调用成功 req={question.value} rsp={results}")
             msg.update(
                 Panel(

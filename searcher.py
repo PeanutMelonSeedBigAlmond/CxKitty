@@ -30,7 +30,7 @@ def suffix_filter(text: str) -> str:
 class SearcherBase:
     "搜索器基类"
 
-    def invoke(self, question_value: str,question_type:int) -> SearchResp:
+    def invoke(self, question_value: str, question_type: int, options: list[str]) -> SearchResp:
         """搜题器调用接口
         >>> SearchResp(
         >>>     code=0,  # 错误码为 0 表示成功, 否则为失败
@@ -51,13 +51,13 @@ class RestApiSearcher(SearcherBase):
     method: Literal["GET", "POST"]
 
     def __init__(
-        self,
-        url,
-        req_field: str = "question",  # 请求字段
-        rsp_field: str = "$.data",  # 答案字段 使用 jsonpath 语法
-        headers: Optional[dict] = None,  # 自定义头部
-        ext_params: Optional[dict] = None,  # 扩展请求字段
-        method: Literal["GET", "POST"] = "POST",  # 请求方式
+            self,
+            url,
+            req_field: str = "question",  # 请求字段
+            rsp_field: str = "$.data",  # 答案字段 使用 jsonpath 语法
+            headers: Optional[dict] = None,  # 自定义头部
+            ext_params: Optional[dict] = None,  # 扩展请求字段
+            method: Literal["GET", "POST"] = "POST",  # 请求方式
     ) -> None:
         self.session = requests.Session()
         self.url = url
@@ -73,18 +73,22 @@ class RestApiSearcher(SearcherBase):
             return SearchResp(0, "ok", self, self.question_value, result[0])
         return SearchResp(-500, "未匹配答案字段", self, self.question_value, None)
 
-    def invoke(self, question_value: str,question_type:int) -> SearchResp:
+    def invoke(self, question_value: str, question_type: int, options: list[str]) -> SearchResp:
         self.question_value = question_value
         try:
             if self.method == "GET":
                 resp = self.session.get(
                     self.url,
-                    params={self.req_field: self.question_value,'type':question_type, **self.ext_params},
+                    params={
+                        self.req_field: self.question_value,
+                        'type': question_type,
+                        'options': options,
+                        **self.ext_params},
                 )
             elif self.method == "POST":
                 resp = self.session.post(
                     self.url,
-                    data={self.req_field: self.question_value,'type':question_type, **self.ext_params},
+                    data={self.req_field: self.question_value, 'type': question_type, 'options': options, **self.ext_params},
                 )
             else:
                 raise TypeError
@@ -110,8 +114,8 @@ class EnncySearcher(RestApiSearcher):
         if "".join(jsonpath.compile("$.data.answer").parse(json_content)) == "很抱歉, 题目搜索不到。":
             return SearchResp(-404, "搜索失败", self, self.question_value, None)
         if "".join(jsonpath.compile("$.data.answer").parse(json_content)) in (
-            "配置为空或者配置错误，请自行检查或者联系作者查看。",
-            "题库配置的“凭证”被刷新，不要刷新你的凭证！只有当你的题库被别人盗用时才能进行刷新操作，否则会导致题库配置失效，请您前往 https://tk.enncy.cn/ 登录后到个人中心复制题库配置，并重新在脚本设置中粘贴题库配置。",
+                "配置为空或者配置错误，请自行检查或者联系作者查看。",
+                "题库配置的“凭证”被刷新，不要刷新你的凭证！只有当你的题库被别人盗用时才能进行刷新操作，否则会导致题库配置失效，请您前往 https://tk.enncy.cn/ 登录后到个人中心复制题库配置，并重新在脚本设置中粘贴题库配置。",
         ):
             return SearchResp(-403, "Token无效", self, self.question_value, None)
         if result := self.rsp_query.parse(json_content):
@@ -130,12 +134,12 @@ class JsonFileSearcher(SearcherBase):
         except FileNotFoundError:
             raise RuntimeError("JSON 题库文件无效, 请检查配置")
 
-    def invoke(self, question_value: str,question_type:int) -> SearchResp:
+    def invoke(self, question_value: str, question_type: int, options: list[str]) -> SearchResp:
         for q, a in self.db.items():
             # 遍历题库缓存并判断相似度
             if (
-                difflib.SequenceMatcher(a=suffix_filter(q), b=suffix_filter(question_value)).ratio()
-                >= 0.9
+                    difflib.SequenceMatcher(a=suffix_filter(q), b=suffix_filter(question_value)).ratio()
+                    >= 0.9
             ):
                 return SearchResp(0, "ok", self, q, a)
         return SearchResp(-404, "题目未匹配", self, question_value, None)
@@ -148,18 +152,18 @@ class SqliteSearcher(SearcherBase):
     rsp_field: str
 
     def __init__(
-        self,
-        file_path: Union[Path, str],
-        req_field: str = "question",
-        rsp_field: str = "answer",
-        table: str = "question",
+            self,
+            file_path: Union[Path, str],
+            req_field: str = "question",
+            rsp_field: str = "answer",
+            table: str = "question",
     ) -> None:
         self.db = sqlite3.connect(file_path)
         self.table = table
         self.req_field = req_field
         self.rsp_field = rsp_field
 
-    def invoke(self, question_value: str,question_type:int) -> SearchResp:
+    def invoke(self, question_value: str, question_type: int, options: list[str]) -> SearchResp:
         try:
             cur = self.db.execute(
                 f"SELECT {self.req_field},{self.rsp_field} FROM {self.table} WHERE {self.req_field}=(?)",

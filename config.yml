@@ -52,8 +52,8 @@ searchers:
   #   file_path: "questions.json"  # 数据库文件路径
 
   # REST API 在线搜题
-  - type: restAPISearcher
-    url: "http://192.168.2.44:5000/search"  # API url
+  - type: restApiSearcher
+    url: "http://127.0.0.1:5000/search"  # API url
     method: "POST"  # 请求方式
     req_field: "problem"  # 请求参数
     headers:  # 自定义请求头(可选) 使用 yaml 的 k-v 语法填写
