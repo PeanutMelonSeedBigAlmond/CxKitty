@@ -286,7 +286,11 @@ class ChapterExam:
         tb.border_style = "yellow"
         mistake_questions = []  # 答错题列表
         for question in self.questions:
-            results = invoke_searcher(question.value,question.q_type.value,list(map(lambda it:it,question.answers)))  # 调用搜索器搜索方法
+            results = invoke_searcher(
+                question.value,
+                question.q_type.value,
+                [question.answers[i] for i in question.answers]
+            )  # 调用搜索器搜索方法
             self.logger.debug(f"题库调用成功 req={question.value} rsp={results}")
             msg.update(
                 Panel(
