@@ -65,7 +65,8 @@ def parse_question(question_node: BeautifulSoup):
         # 遍历选项
         for answer in answers:
             k = answer.em["id-param"].strip()
-            answer_map[k] = answer.find_all(["p", "cc"])[-1].text.strip()
+            tmp_list = list(filter(lambda it: len(it) != 0, map(lambda it: it.text.strip(), answer.find_all(["p", "cc"]))))
+            answer_map[k] = tmp_list[-1]
     return QuestionModel(
         q_id=question_id, value=value, q_type=question_type, answers=answer_map, answer=""
     )
