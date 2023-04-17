@@ -202,7 +202,10 @@ class ChapterExam:
             if re.search(r"无效的权限", p.text):
                 self.logger.warning("试题无权限")
                 return False
-        self.title = html.find("h3", {"class": "py-Title"}).text.strip()
+        try:
+            self.title=html.find("h3", {"class": "py-Title"}).text.strip()
+        except AttributeError:
+            self.title='章节测验'
         # 提取答题表单参数
         self.workAnswerId = int(html.find("input", {"name": "workAnswerId"})["value"])
         self.enc_work = html.find("input", {"name": "enc_work"})["value"]
