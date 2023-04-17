@@ -86,6 +86,11 @@ class ChapterVideo:
         resp.raise_for_status()
         html = BeautifulSoup(resp.text, "lxml")
         try:
+            try:
+                if 'blankTips' in html.p['class']:
+                    return False
+            except Exception:
+                pass
             if r := re.search(
                 r"window\.AttachmentSetting *= *(.+?);",
                 html.head.find("script", type="text/javascript").text,
